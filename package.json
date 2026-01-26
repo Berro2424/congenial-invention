@@ -1,0 +1,24 @@
+{
+  "name": "congenial-invention",
+  "version": "1.0.0",
+  "description": "The Campus Resource Reservation API is a backend-only application designed to manage reservable campus resources such as study rooms, lab spaces, and equipment. The system provides a structured way for applications to interact with campus resources through a centralized API.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Berro2424/congenial-invention.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Berro2424/congenial-invention/issues"
+  },
+  "homepage": "https://github.com/Berro2424/congenial-invention#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
