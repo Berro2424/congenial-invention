@@ -1,31 +1,45 @@
+
+
+
+
+
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const validate = require('../middleware/validateRequest');
 
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const [rows] = await db.query('SELECT * FROM resources');
     res.status(200).json(rows);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch resources' });
+    next(error);
   }
 });
 
-router.post('/', async (req, res) => {
-  try {
-    const { resource_name, resource_type, location } = req.body;
+router.post(
+  '/',
+  validate(['resource_name', 'resource_type']),
+  async (req, res, next) => {
+    try {
+      const { resource_name, resource_type, location } = req.body;
 
-    if (!resource_name || !resource_type) {
-      return res.status(400).json({ error: 'resource_name and resource_type are required' });
+      if (!location) {
+        return res.status(400).json({
+          error: 'Resources cannot be created without a location'
+        });
+      }
+
+      const [result] = await db.query(
+        'INSERT INTO resources (resource_name, resource_type, location) VALUES (?, ?, ?)',
+        [resource_name, resource_type, location]
+      );
+
+      res.status(201).json({ resource_id: result.insertId });
+    } catch (error) {
+      next(error);
     }
-
-    const [result] = await db.query(
-      'INSERT INTO resources (resource_name, resource_type, location) VALUES (?, ?, ?)',
-      [resource_name, resource_type, location || null]
-    );
-
-    res.status(201).json({ resource_id: result.insertId });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create resource' });
   }
-});
+);
+
+module.exports = router;
