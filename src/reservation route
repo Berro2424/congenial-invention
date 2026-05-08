@@ -1,67 +1,94 @@
 
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
-const validate = require('../middleware/validateRequest');
 
-router.get('/', async (req, res, next) => {
+const db = require('../db');
+
+const auth = require('../middleware/authMiddleware');
+
+// GET all reservations
+router.get('/', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM reservations');
-    res.status(200).json(rows);
-  } catch (error) {
-    next(error);
+    const [reservations] = await db.query(
+      'SELECT * FROM reservations'
+    );
+
+    res.json(reservations);
+  } catch (err) {
+    res.status(500).json({
+      error: 'Failed to fetch reservations'
+    });
   }
 });
 
-router.post(
-  '/',
-  validate(['user_id', 'resource_id', 'start_time', 'end_time']),
-  async (req, res, next) => {
-    try {
-      const { user_id, resource_id, start_time, end_time } = req.body;
+// GET reservation by id
+router.get('/:id', async (req, res) => {
+  try {
+    const [reservation] = await db.query(
+      'SELECT * FROM reservations WHERE id = ?',
+      [req.params.id]
+    );
 
-      if (new Date(end_time) <= new Date(start_time)) {
-        return res.status(400).json({
-          error: 'Reservation end_time must be after start_time'
-        });
-      }
-
-      const [resourceRows] = await db.query(
-        'SELECT * FROM resources WHERE resource_id = ?',
-        [resource_id]
-      );
-
-      if (resourceRows.length === 0) {
-        return res.status(400).json({
-          error: 'Cannot create reservation for a nonexistent resource'
-        });
-      }
-
-      const [duplicateRows] = await db.query(
-        `SELECT * FROM reservations
-         WHERE resource_id = ?
-         AND start_time = ?
-         AND end_time = ?`,
-        [resource_id, start_time, end_time]
-      );
-
-      if (duplicateRows.length > 0) {
-        return res.status(400).json({
-          error: 'Duplicate reservation for the same resource and time window is not allowed'
-        });
-      }
-
-      const [result] = await db.query(
-        `INSERT INTO reservations (user_id, resource_id, start_time, end_time)
-         VALUES (?, ?, ?, ?)`,
-        [user_id, resource_id, start_time, end_time]
-      );
-
-      res.status(201).json({ reservation_id: result.insertId });
-    } catch (error) {
-      next(error);
+    if (reservation.length === 0) {
+      return res.status(404).json({
+        error: 'Reservation not found'
+      });
     }
+
+    res.json(reservation[0]);
+  } catch (err) {
+    res.status(500).json({
+      error: 'Failed to fetch reservation'
+    });
   }
-);
+});
+
+// CREATE reservation (PROTECTED)
+router.post('/', auth, async (req, res) => {
+  try {
+    const {
+      user_id,
+      resource_id,
+      start_time,
+      end_time
+    } = req.body;
+
+    const [result] = await db.query(
+      `
+      INSERT INTO reservations
+      (user_id, resource_id, start_time, end_time)
+      VALUES (?, ?, ?, ?)
+      `,
+      [user_id, resource_id, start_time, end_time]
+    );
+
+    res.status(201).json({
+      message: 'Reservation created successfully',
+      reservationId: result.insertId
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: 'Failed to create reservation'
+    });
+  }
+});
+
+// DELETE reservation
+router.delete('/:id', async (req, res) => {
+  try {
+    await db.query(
+      'DELETE FROM reservations WHERE id = ?',
+      [req.params.id]
+    );
+
+    res.json({
+      message: 'Reservation deleted successfully'
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: 'Failed to delete reservation'
+    });
+  }
+});
 
 module.exports = router;
