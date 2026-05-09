@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 
@@ -8,22 +7,17 @@ const auth = require('../middleware/authMiddleware');
 const requireRole = require('../middleware/roleMiddleware');
 
 // GET all resources
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
-    const [resources] = await db.query(
-      'SELECT * FROM resources'
-    );
-
+    const [resources] = await db.query('SELECT * FROM resources');
     res.json(resources);
   } catch (err) {
-    res.status(500).json({
-      error: 'Failed to fetch resources'
-    });
+    next(err);
   }
 });
 
 // GET resource by id
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const [resource] = await db.query(
       'SELECT * FROM resources WHERE id = ?',
@@ -38,9 +32,7 @@ router.get('/:id', async (req, res) => {
 
     res.json(resource[0]);
   } catch (err) {
-    res.status(500).json({
-      error: 'Failed to fetch resource'
-    });
+    next(err);
   }
 });
 
@@ -49,9 +41,21 @@ router.post(
   '/',
   auth,
   requireRole('admin'),
-  async (req, res) => {
+  async (req, res, next) => {
     try {
       const { name, description } = req.body;
+
+      if (!name) {
+        return res.status(400).json({
+          error: 'name is required'
+        });
+      }
+
+      if (!description) {
+        return res.status(400).json({
+          error: 'description is required'
+        });
+      }
 
       const [result] = await db.query(
         `
@@ -66,15 +70,13 @@ router.post(
         resourceId: result.insertId
       });
     } catch (err) {
-      res.status(500).json({
-        error: 'Failed to create resource'
-      });
+      next(err);
     }
   }
 );
 
 // DELETE resource
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     await db.query(
       'DELETE FROM resources WHERE id = ?',
@@ -85,9 +87,7 @@ router.delete('/:id', async (req, res) => {
       message: 'Resource deleted successfully'
     });
   } catch (err) {
-    res.status(500).json({
-      error: 'Failed to delete resource'
-    });
+    next(err);
   }
 });
 

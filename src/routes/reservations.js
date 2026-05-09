@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 
@@ -7,7 +6,7 @@ const db = require('../db');
 const auth = require('../middleware/authMiddleware');
 
 // GET all reservations
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const [reservations] = await db.query(
       'SELECT * FROM reservations'
@@ -15,14 +14,12 @@ router.get('/', async (req, res) => {
 
     res.json(reservations);
   } catch (err) {
-    res.status(500).json({
-      error: 'Failed to fetch reservations'
-    });
+    next(err);
   }
 });
 
 // GET reservation by id
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const [reservation] = await db.query(
       'SELECT * FROM reservations WHERE id = ?',
@@ -37,14 +34,12 @@ router.get('/:id', async (req, res) => {
 
     res.json(reservation[0]);
   } catch (err) {
-    res.status(500).json({
-      error: 'Failed to fetch reservation'
-    });
+    next(err);
   }
 });
 
 // CREATE reservation (PROTECTED)
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, async (req, res, next) => {
   try {
     const {
       user_id,
@@ -52,6 +47,30 @@ router.post('/', auth, async (req, res) => {
       start_time,
       end_time
     } = req.body;
+
+    if (!user_id) {
+      return res.status(400).json({
+        error: 'user_id is required'
+      });
+    }
+
+    if (!resource_id) {
+      return res.status(400).json({
+        error: 'resource_id is required'
+      });
+    }
+
+    if (!start_time) {
+      return res.status(400).json({
+        error: 'start_time is required'
+      });
+    }
+
+    if (!end_time) {
+      return res.status(400).json({
+        error: 'end_time is required'
+      });
+    }
 
     const [result] = await db.query(
       `
@@ -67,14 +86,12 @@ router.post('/', auth, async (req, res) => {
       reservationId: result.insertId
     });
   } catch (err) {
-    res.status(500).json({
-      error: 'Failed to create reservation'
-    });
+    next(err);
   }
 });
 
 // DELETE reservation
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     await db.query(
       'DELETE FROM reservations WHERE id = ?',
@@ -85,9 +102,7 @@ router.delete('/:id', async (req, res) => {
       message: 'Reservation deleted successfully'
     });
   } catch (err) {
-    res.status(500).json({
-      error: 'Failed to delete reservation'
-    });
+    next(err);
   }
 });
 

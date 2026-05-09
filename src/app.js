@@ -4,10 +4,11 @@ const usersRoutes = require('./routes/users');
 const resourcesRoutes = require('./routes/resources');
 const reservationsRoutes = require('./routes/reservations');
 const errorHandler = require('./middleware/errorHandler');
-
+const requestLogger = require('./middleware/requestLogger');
 const app = express();
 
 app.use(express.json());
+app.use(requestLogger);
 app.use('/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/resources', resourcesRoutes);
