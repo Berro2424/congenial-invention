@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const db = require('../db');
+const { getAll, getById } = require('../utils/dbHelpers');
 
 const auth = require('../middleware/authMiddleware');
 const requireRole = require('../middleware/roleMiddleware');
@@ -9,7 +10,7 @@ const requireRole = require('../middleware/roleMiddleware');
 // GET all resources
 router.get('/', async (req, res, next) => {
   try {
-    const [resources] = await db.query('SELECT * FROM resources');
+    const resources = await getAll('resources');
     res.json(resources);
   } catch (err) {
     next(err);
@@ -19,24 +20,21 @@ router.get('/', async (req, res, next) => {
 // GET resource by id
 router.get('/:id', async (req, res, next) => {
   try {
-    const [resource] = await db.query(
-      'SELECT * FROM resources WHERE id = ?',
-      [req.params.id]
-    );
+    const resource = await getById('resources', req.params.id);
 
-    if (resource.length === 0) {
+    if (!resource) {
       return res.status(404).json({
         error: 'Resource not found'
       });
     }
 
-    res.json(resource[0]);
+    res.json(resource);
   } catch (err) {
     next(err);
   }
 });
 
-// CREATE resource (ADMIN ONLY)
+// CREATE resource ADMIN ONLY
 router.post(
   '/',
   auth,
@@ -78,6 +76,14 @@ router.post(
 // DELETE resource
 router.delete('/:id', async (req, res, next) => {
   try {
+    const resource = await getById('resources', req.params.id);
+
+    if (!resource) {
+      return res.status(404).json({
+        error: 'Resource not found'
+      });
+    }
+
     await db.query(
       'DELETE FROM resources WHERE id = ?',
       [req.params.id]

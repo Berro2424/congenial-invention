@@ -2,16 +2,14 @@ const express = require('express');
 const router = express.Router();
 
 const db = require('../db');
+const { getAll, getById } = require('../utils/dbHelpers');
 
 const auth = require('../middleware/authMiddleware');
 
 // GET all reservations
 router.get('/', async (req, res, next) => {
   try {
-    const [reservations] = await db.query(
-      'SELECT * FROM reservations'
-    );
-
+    const reservations = await getAll('reservations');
     res.json(reservations);
   } catch (err) {
     next(err);
@@ -21,24 +19,21 @@ router.get('/', async (req, res, next) => {
 // GET reservation by id
 router.get('/:id', async (req, res, next) => {
   try {
-    const [reservation] = await db.query(
-      'SELECT * FROM reservations WHERE id = ?',
-      [req.params.id]
-    );
+    const reservation = await getById('reservations', req.params.id);
 
-    if (reservation.length === 0) {
+    if (!reservation) {
       return res.status(404).json({
         error: 'Reservation not found'
       });
     }
 
-    res.json(reservation[0]);
+    res.json(reservation);
   } catch (err) {
     next(err);
   }
 });
 
-// CREATE reservation (PROTECTED)
+// CREATE reservation PROTECTED
 router.post('/', auth, async (req, res, next) => {
   try {
     const {
@@ -93,6 +88,14 @@ router.post('/', auth, async (req, res, next) => {
 // DELETE reservation
 router.delete('/:id', async (req, res, next) => {
   try {
+    const reservation = await getById('reservations', req.params.id);
+
+    if (!reservation) {
+      return res.status(404).json({
+        error: 'Reservation not found'
+      });
+    }
+
     await db.query(
       'DELETE FROM reservations WHERE id = ?',
       [req.params.id]

@@ -24,3 +24,10 @@ The API does not handle frontend interfaces, user authentication, payments, or a
 
 ## Project Status
 Module 1: Foundation setup only. No database schema or API endpoints have been implemented yet.
+## Refinement and Optimization
+
+For this milestone, I cleaned up the backend code to make the project easier to read and maintain. I moved repeated database logic into helper functions so route files do not repeat the same SELECT queries. This makes the code easier to update later.
+
+I also reviewed the middleware flow to make sure request logging runs before routes, authentication runs before protected route logic, validation happens before database actions, and centralized error handling runs after the routes.
+
+A small efficiency improvement was made by checking required input before running database queries. This prevents unnecessary database work when a request is missing required fields.
