@@ -1,33 +1,85 @@
-# Campus Resource Reservation API
+# Backend Reservation System API
 
-## Project Description
-The Campus Resource Reservation API is a backend-only application designed to manage reservable campus resources such as study rooms, lab spaces, and equipment. The system provides a structured way for applications to interact with campus resources through a centralized API.
+## Project Overview
 
-## Project Scope and System Description
-The Campus Resource Reservation API is responsible for managing reservation-related data for campus resources. These resources include study rooms, laboratory spaces, and shared equipment that can be reserved for specific time periods.
+This project is a backend reservation system built using Node.js, Express, and MySQL. The API allows users to register, log in, create reservations, and manage resources. Authentication and authorization are implemented using JWT and role-based middleware.
 
-Through this API, users will be able to view available resources, create reservations, update existing reservations, and cancel reservations when necessary. The system focuses strictly on backend responsibilities such as handling requests, managing data, and enforcing reservation logic.
+## Technology Stack
 
-The API does not handle frontend interfaces, user authentication, payments, or administrative approval workflows. These features are considered out of scope and would typically be managed by separate systems. The goal of this backend is to act as a reliable foundation that other applications can build on.
-
-## Technologies Used
 - Node.js
 - Express.js
 - MySQL
-- Git & GitHub
+- mysql2
+- bcrypt
+- jsonwebtoken
+- GitHub
 
-## Running the Server Locally
+## Setup Instructions
+
 1. Clone the repository
-2. Install dependencies using `npm install`
-3. Start the server with `node src/server.js`
-4. Access the test route at `http://localhost:3000/health`
+2. Open the project in VS Code
+3. Install dependencies using:
 
-## Project Status
-Module 1: Foundation setup only. No database schema or API endpoints have been implemented yet.
+npm install
+
+## Environment Variables
+
+Create a .env file and include:
+
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=yourpassword
+DB_NAME=reservation_system
+JWT_SECRET=your_secret_key
+
+## Database Initialization Steps
+
+1. Create the MySQL database
+2. Run the SQL schema file included in the repository
+3. Ensure all required tables exist before starting the server
+
+## Authentication Overview
+
+Authentication is handled using JWT tokens. Protected routes require a valid token in the Authorization header.
+
+Admin-only routes use role-based middleware to restrict access.
+
+## API Endpoint Summary
+
+### Authentication
+
+POST /auth/register
+POST /auth/login
+
+### Users
+
+GET /api/users
+POST /api/users
+
+### Resources
+
+GET /api/resources
+GET /api/resources/:id
+POST /api/resources
+DELETE /api/resources/:id
+
+### Reservations
+
+GET /api/reservations
+GET /api/reservations/:id
+POST /api/reservations
+DELETE /api/reservations/:id
+
+## How To Run The Project Locally
+
+Start the server using:
+
+node src/server.js
+
+The server should run on:
+
+http://localhost:3000
+
 ## Refinement and Optimization
 
-For this milestone, I cleaned up the backend code to make the project easier to read and maintain. I moved repeated database logic into helper functions so route files do not repeat the same SELECT queries. This makes the code easier to update later.
-
-I also reviewed the middleware flow to make sure request logging runs before routes, authentication runs before protected route logic, validation happens before database actions, and centralized error handling runs after the routes.
-
-A small efficiency improvement was made by checking required input before running database queries. This prevents unnecessary database work when a request is missing required fields.
+For later milestones, the backend code was cleaned and refactored to improve maintainability and readability. Repeated database query logic was moved into helper functions, middleware flow was improved, and validation was added before database operations to avoid unnecessary processing.
